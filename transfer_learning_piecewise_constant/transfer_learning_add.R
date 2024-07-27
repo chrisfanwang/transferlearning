@@ -1,12 +1,14 @@
 library(genlasso)
 library(plotrix)
 library(ggplot2)
-source("/Users//transfer_learning_piecewise_constant/transfer_learning_functions.R")
+source("transfer_learning_functions.R")
 library(tictoc)
 library(latex2exp)
 library(psych)
 library(changepoints)
 library(egg)
+
+
 
 
 harmonic_sizes = c(
@@ -32,9 +34,9 @@ plott_1 <- ggplot(data = d_1, mapping = aes(x = sizes, y = harmonic_sizes)) +
   labs(y = expression(atop(K %*% "the harmonic mean", "of source observations")), x = "K") +
   theme_classic() +
   theme(
-  axis.line.x = element_line(linewidth = 0.5, color = "black"),
-  axis.line.y = element_line(linewidth = 1, color = "black")
-)
+    axis.line.x = element_line(linewidth = 0.5, color = "black"),
+    axis.line.y = element_line(linewidth = 1, color = "black")
+  )
 
 print(plott_1)
 
@@ -45,13 +47,13 @@ gamma= 0.5
 jump.mean = c(2*gamma, 4*gamma, 1*gamma, 5*gamma, 7*gamma, 8*gamma, 2*gamma, 1*gamma, 3*gamma, 4*gamma)
 jump.location = c(0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9)
 
-n_0 = 100
+n_0 = 200
 n_k_size = c(2000, 1800, 1600, 1400, 1200, 1000, 800, 600, 400, 200)
 
-H_k = 0.2
-sig.delta_1 = 0.5
-h_1 = 100
-sigma = 1
+H_k = 0.15
+sig.delta_1 = 0.2
+h_1 = 20
+sigma = 0.5
 
 simu = 100
 
@@ -76,9 +78,9 @@ for (simu_test in 1:simu){
     k_subsets = list()
     
     for (i in 1:length(k_set)) {
-
+      
       k_combos =  combn(k_set, i, simplify = FALSE)
-     
+      
       k_subsets <- c(k_subsets, k_combos)
     }
     k_harmonic <- lapply(k_subsets, function(x) length(x)^2 / sum(1/x))
@@ -98,24 +100,24 @@ for (simu_test in 1:simu){
     
     y_all_project = rep(0, n_0)
     for (i in 1:k){
-        y_project = P_n0_n(n_0, n_k_size[i]) %*% obs$obs_y[[i]]
-        
-        y_all_project = y_all_project + y_project
+      y_project = P_n0_n(n_0, n_k_size[i]) %*% obs$obs_y[[i]]
+      
+      y_all_project = y_all_project + y_project
     }
     
     y_all_project = y_all_project/k
-        
+    
     result_fl_test = fusedlasso1d(y_all_project)
-        
+    
     cv_fl_test = cv.trendfilter(result_fl_test, k=5)
-        
+    
     fit_fl_test = coef(result_fl_test, lambda = cv_fl_test$lambda.min)$beta
-        
+    
     result_fl[k, simu_test] = sum((fit_fl_test - f_0)^2)/n_0
-        
+    
     
     fit_l0_test = cv_l_0_est(y_all_project) 
-        
+    
     result_l0[k, simu_test] = sum((fit_l0_test-f_0)^2)/n_0
     
     
@@ -134,7 +136,7 @@ for (simu_test in 1:simu){
     
     
     
-    }
+  }
 }
 
 
@@ -152,7 +154,7 @@ se = c( apply(result_fl, 1, function(column) sd(column) / sqrt(length(column))),
         apply(result_fl_est, 1, function(column) sd(column) / sqrt(length(column))),  
         apply(result_l0, 1, function(column) sd(column) / sqrt(length(column))),
         apply(result_l0_est, 1, function(column) sd(column) / sqrt(length(column)))
-        )
+)
 
 d_2 <- data.frame(sizes = sizes, Method = Method, value = value, se = se)
 
@@ -176,4 +178,3 @@ print(plott_2)
 
 
 ggarrange(plott_1, plott_2, ncol = 2)
-dev.copy2pdf(file=paste("scenario_add.pdf",sep = ''), width = 8, height = 4)

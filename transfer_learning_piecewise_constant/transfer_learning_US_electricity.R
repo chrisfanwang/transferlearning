@@ -2,7 +2,7 @@ library(lubridate) #to use function ymd
 library(genlasso)
 library(plotrix)
 library(zoo)
-source("/Users/transfer_learning_piecewise_constant/transfer_learning_functions.R")
+source("transfer_learning_functions.R")
 library(changepoints)
 library(httr)
 library(jsonlite)
@@ -140,7 +140,7 @@ if (http_status(response_longisland)$category == "Success") {
   print("API request failed")
 }
 
-data_target = data_central$response$data$value[3:1094]
+data_target = as.numeric(data_central$response$data$value[3:1094])
   
 
 day_length = length(data_target)/7
@@ -155,16 +155,16 @@ for (i in 1:day_length){
 
 
 
-data_auxiliary = rbind(data_west$response$data$value[3:1094],
-                       data_genesee$response$data$value[3:1094], 
-                       data_NYcity$response$data$value[3:1094],
-                       data_north$response$data$value[3:1094],
-                       data_MV$response$data$value[3:1094], 
-                       data_capital$response$data$value[3:1094],
-                       data_HV$response$data$value[3:1094], 
-                       data_millwood$response$data$value[3:1094], 
-                       data_dunwoodie$response$data$value[3:1094],
-                       data_longisland$response$data$value[3:1094])
+data_auxiliary = rbind(as.numeric(data_west$response$data$value[3:1094]),
+                       as.numeric(data_genesee$response$data$value[3:1094]), 
+                       as.numeric(data_NYcity$response$data$value[3:1094]),
+                       as.numeric(data_north$response$data$value[3:1094]),
+                       as.numeric(data_MV$response$data$value[3:1094]), 
+                       as.numeric(data_capital$response$data$value[3:1094]),
+                       as.numeric(data_HV$response$data$value[3:1094]), 
+                       as.numeric(data_millwood$response$data$value[3:1094]), 
+                       as.numeric(data_dunwoodie$response$data$value[3:1094]),
+                       as.numeric(data_longisland$response$data$value[3:1094]))
 
 data_auxiliary = t(scale(t(data_auxiliary)))
 
@@ -195,6 +195,10 @@ fit_fl_train = coef(result_fl_train, lambda = cv_fl_train$lambda.min)$beta
 result_fl = sum((fit_fl_train-data_target_weekly_test)^2)/n_0
 
 
+fit_l0_train =  cv_l_0_est(data_target_weekly_train)
+
+result_l0 = sum((fit_l0_train-data_target_weekly_test)^2)/n_0
+
 
 
 
@@ -211,15 +215,14 @@ fit_fl_T_1_train = coef(result_fl_T_1_train, lambda = cv_fl_T_1_train$lambda.min
 result_fl_T_1 = sum((fit_fl_T_1_train -data_target_weekly_test)^2)/n_0
 
 
-fit_l0_train =  cv_l_0_est(data_target_weekly_train)
-
-result_l0 = sum((fit_l0_train-data_target_weekly_test)^2)/n_0
-
-
 
 fit_l0_T_1_train =  cv_l_0_est(y_1_project)
 
 result_l0_T_1 = sum((fit_l0_T_1_train-data_target_weekly_test)^2)/n_0
+
+result_fl_T_1
+
+result_l0_T_1
 
 
 index_k = A_detect_index(data_auxiliary, data_target_weekly_train)
@@ -318,7 +321,7 @@ index_k
 
 #NY_city
 
-data_target = data_NYcity$response$data$value[3:1094]
+data_target = as.numeric(data_NYcity$response$data$value[3:1094])
 
 
 day_length = length(data_target)/7
@@ -328,21 +331,21 @@ data_target_weekly = rep(NA, day_length)
 
 
 for (i in 1:day_length){
-  data_target_weekly[i ] = data_target[(i-1)*7]
+  data_target_weekly[i ] = data_target[(i-1)*7+1]
 }  
 
 
 
-data_auxiliary = rbind(data_west$response$data$value[3:1094],
-                       data_genesee$response$data$value[3:1094], 
-                       data_central$response$data$value[3:1094],
-                       data_north$response$data$value[3:1094],
-                       data_MV$response$data$value[3:1094], 
-                       data_capital$response$data$value[3:1094],
-                       data_HV$response$data$value[3:1094], 
-                       data_millwood$response$data$value[3:1094], 
-                       data_dunwoodie$response$data$value[3:1094],
-                       data_longisland$response$data$value[3:1094])
+data_auxiliary = rbind(as.numeric(data_west$response$data$value[3:1094]),
+                       as.numeric(data_genesee$response$data$value[3:1094]), 
+                       as.numeric(data_central$response$data$value[3:1094]),
+                       as.numeric(data_north$response$data$value[3:1094]),
+                       as.numeric(data_MV$response$data$value[3:1094]), 
+                       as.numeric(data_capital$response$data$value[3:1094]),
+                       as.numeric(data_HV$response$data$value[3:1094]), 
+                       as.numeric(data_millwood$response$data$value[3:1094]), 
+                       as.numeric(data_dunwoodie$response$data$value[3:1094]),
+                       as.numeric(data_longisland$response$data$value[3:1094]))
 
 data_auxiliary = t(scale(t(data_auxiliary)))
 
@@ -374,6 +377,11 @@ result_fl = sum((fit_fl_train-data_target_weekly_test)^2)/n_0
 
 
 
+fit_l0_train =  cv_l_0_est(data_target_weekly_train)
+
+result_l0 = sum((fit_l0_train-data_target_weekly_test)^2)/n_0
+
+
 
 
 n_k = dim(data_auxiliary)[2]
@@ -389,15 +397,17 @@ fit_fl_T_1_train = coef(result_fl_T_1_train, lambda = cv_fl_T_1_train$lambda.min
 result_fl_T_1 = sum((fit_fl_T_1_train -data_target_weekly_test)^2)/n_0
 
 
-fit_l0_train =  cv_l_0_est(data_target_weekly_train)
-
-result_l0 = sum((fit_l0_train-data_target_weekly_test)^2)/n_0
-
 
 
 fit_l0_T_1_train =  cv_l_0_est(y_1_project)
 
 result_l0_T_1 = sum((fit_l0_T_1_train-data_target_weekly_test)^2)/n_0
+
+
+result_fl_T_1
+
+result_l0_T_1
+
 
 
 index_k = A_detect_index(data_auxiliary, data_target_weekly_train)

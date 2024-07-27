@@ -59,6 +59,33 @@ f_gen <- function(jump.mean_new, jump.location_new, n0_new, n_new, size_K, size_
   return(list(f_0 = f_0, W=W))
 }
 
+f_gen_tempde <- function(jump.mean_new, jump.location_new, n0_new, n_new, size_K, size_A, H_k,  h_1, h_2, temp_h){
+  f_0 = form.truth(jump.mean_new, jump.location_new, n0_new)
+  W = matrix(NA, nrow = size_K, ncol = n_new)
+  for (k in 1:size_K){
+    sample_k = sort(sample(1:n_new, H_k, replace = F)) 
+    if(k <= size_A){
+        W[k, -sample_k] = (P_n_n0(n0_new, n_new) %*% f_0)[-sample_k, ] 
+        error = rep(NA, length(sample_k))
+        error[1] = rnorm(1, 0, h_1/100)
+        for (i in 1:(length(sample_k)-1)) {
+          error[i+1] = temp_h*error[i] + (1-temp_h)*rnorm(1, 0, h_1/100)
+        }
+        W[k, sample_k] = (P_n_n0(n0_new, n_new) %*% f_0)[sample_k, ]  + error
+      }
+    else{
+        W[k, -sample_k] = (P_n_n0(n0_new, n_new) %*% f_0)[-sample_k, ] 
+        error = rep(NA, length(sample_k))
+        error[1] = rnorm(1, 0, h_2/100)
+        for (i in 1:(length(sample_k)-1)) {
+          error[i+1] = temp_h*error[i] + (1-temp_h)*rnorm(1, 0, h_2/100)
+        }
+        W[k, sample_k] = (P_n_n0(n0_new, n_new) %*% f_0)[sample_k, ]  + error
+      }
+    }
+  return(list(f_0 = f_0, W=W))
+}
+
 obs_gen <- function(f_0, W, sigma){
   y_0 = f_0 + rnorm(length(f_0), 0, sigma^2)
   obs_y = matrix(NA, nrow = dim(W)[1], ncol = dim(W)[2])
@@ -70,6 +97,29 @@ obs_gen <- function(f_0, W, sigma){
 }
 
 
+obs_gen_tempde<- function(f_0, W, sigma, coef_temp_1, coef_temp_2 = 0){
+  error = rep(NA, length(f_0))
+  error[1] = rnorm(1, 0, sigma^2)
+  for (i in 1:(length(f_0)-1)) {
+    error[i+1] = coef_temp_1*error[i] + (1-coef_temp_1)*rnorm(1, 0, sigma^2)
+  }
+  y_0 = f_0 + error
+  
+  error_y = matrix(NA, nrow = dim(W)[1], ncol = dim(W)[2])
+  K.length = dim(W)[1]
+  
+  for (k in 1: K.length){
+    error_y[k, 1] =  rnorm(1, 0, sigma^2)
+    for (i in 1:( dim(W)[2]-1)) {
+      error_y[k, i+1] = coef_temp_2*error_y[k, i] +  (1-coef_temp_2)*rnorm(1, 0, sigma^2)
+    } 
+  }
+  obs_y = W + error_y
+  return(list(y_0 = y_0, obs_y =obs_y))
+}
+
+
+
 # Returns a sequence of integers from a to b if a <= b, otherwise nothing.
 Seq <- function(a, b, ...) {
   if (a<=b) return(seq(a,b,...))
@@ -78,11 +128,43 @@ Seq <- function(a, b, ...) {
 }
 
 
+CV.l0 = function(y, k = 5, gamma, delta = 1){
+    n = length(y)
+    foldid = c(0,rep(Seq(1,k),n-2)[Seq(1,n-2)],0)
+    cvall = rep(0,k)
+    pos = 1:n
+    for (i in Seq(1,k)) {
+  
+    otr = which(foldid!=i)
+    ntr = length(otr)
+    ytr = y[otr]
+    ptr = pos[otr]
+    
+    b = DP.univar(ytr, gamma, delta = 1)$yhat 
+    
+    
+    ote = which(foldid==i)
+    yte = y[ote]
+    pte = pos[ote]
+    ilo = which((Seq(1,n)%in%(ote-1))[otr])
+    ihi = which((Seq(1,n)%in%(ote+1))[otr])
+    a = (pte - ptr[ilo])/(ptr[ihi]-ptr[ilo])
+    pred = b[ilo]*(1-a) + b[ihi]*a
+    cvall[i] = mean((yte-pred)^2)
+    }
+    
+  cverr = mean(cvall)
+  
+  result = list(test_error = cverr)
+  return(result)
+  
+}  
+
 
 cv_l_0_est <-function(y_tar){
   lamb.init = max((y_tar-mean(y_tar))^2)
-  max_in = 100
-  gamma_ratio = 0.95
+  max_in = 1000
+  gamma_ratio = 0.99
   gamma_set = rep(NA, max_in) 
   for(i in (1:max_in)){
     if (i==1){
@@ -92,11 +174,15 @@ cv_l_0_est <-function(y_tar){
       gamma_set[i] = gamma_set[i-1]*gamma_ratio
     }
   }
-  cv_result = CV.search.DP.univar(y_tar, gamma_set, delta = 1)
-  min_idx = which.min(cv_result$test_error)
+  cv_result = sapply(1:length(gamma_set), function(j) CV.l0(y_tar, k = 5, gamma_set[j], delta = 1)$test_error)
+  min_idx = which.min(cv_result)
   final_fit = DP.univar(y_tar, gamma_set[min_idx], delta = 1)$yhat 
   
 }
+
+
+
+
 
 A_detect_alg_calculation <- function(y_new, y_old, t_hat_k){
   n_new = length(y_new)
@@ -196,6 +282,118 @@ obs_gen_new <- function(f_0, W, sigma){
   
   return(list(y_0 = y_0, obs_y =obs_y))
 }
+
+
+insert_values <- function(y, y1) {
+  n0 <- length(y)
+  n1 <- length(y1)
+  n_total <- n0 + n1
+  
+  yt <- numeric(n_total)
+  
+  insert_positions <- ceiling((1:n0) * n1 / n0) + (1:n0)
+  
+  yt[insert_positions] <- y
+  
+  remaining_positions <- setdiff(1:n_total, insert_positions)
+  yt[remaining_positions] <- y1[1:length(remaining_positions)]
+  
+  return(yt)
+}
+
+
+alignment_matrix <- function(n, h, m) {
+  if (length(m) != (h + 1)) {
+    stop("Length of m must be h + 1.")
+  }
+  
+  total_m <- sum(m)
+  
+  P <- matrix(0, nrow = n, ncol = total_m)
+  
+  for (i in 1:n) {
+    start_indices <- sapply(m, function(mk) ceiling((i-1) * mk / n))
+    end_indices <- sapply(m, function(mk) ceiling(i * mk / n))
+    
+    start_sum <- cumsum(start_indices)
+    end_sum <- cumsum(end_indices)
+    
+    start_j <- start_sum[h+1] + 1
+    end_j <- end_sum[h+1]
+    
+    if (start_j <= end_j) {
+      denominator <- sum(end_indices - start_indices)
+      
+      P[i, start_j:end_j] <- 1 / denominator
+    }
+  }
+  
+  return(P)
+}
+
+
+construct_vector <- function(y, y_list) {
+  n0 <- length(y)
+  
+  n_k <- sapply(y_list, length)
+  
+  total_n <- sum(c(n0, n_k))
+  
+  y_all <- numeric(total_n)
+  
+
+  calc_J <- function(j, k, n0, n_k) {
+    
+    if (k == 1) {
+      sum_lk <- j
+    } else {
+    sum_lk <- sum(sapply(1:(k-1), function(t) ceiling(j * n_k[t] / n0))) +j
+    }
+    if (k == length(n_k) + 1) {
+      sum_rk = 0
+    }
+    else {
+    sum_rk <- sum(sapply(k:length(n_k), function(t) ceiling((j-1) * n_k[t] / n0)))
+    }
+    return(sum_lk + sum_rk)
+  }
+  
+  for (j in 1:n0) {
+    J1 <- calc_J(j, 1, n0, n_k)
+    y_all[J1 ] <- y[j]
+  }
+  
+  for (k in 1:length(y_list)) {
+    y_k <- y_list[[k]]
+    
+    nk_len <- length(y_k)
+    
+    
+    
+    for (j in 1:n0) {
+      Jk <- calc_J(j, k, n0, n_k)
+      Jk1 <- calc_J(j, k + 1, n0, n_k)
+      indices <- (Jk + 1):Jk1
+      y_k_index <- (ceiling((j-1)* nk_len / n0) +1): ceiling(j * nk_len / n0)
+      if (length(indices) > 0 && length(y_k_index)> 0) {
+        y_all[indices] <- y_k[y_k_index]
+        y_k_index <- y_k_index + length(indices)
+      }
+    }
+  }
+  
+  return(y_all)
+}
+
+# Example usage
+y <- c(1, 2, 3)
+y1 <- c(10, 11, 12, 13, 14)
+y2 <- c(20, 21, 22, 23, 24, 25, 26)
+
+y_all <- construct_vector(y, list(y1, y2))
+print(y_all)
+
+
 
 
 

@@ -2,13 +2,13 @@ library(lubridate) #to use function ymd
 library(genlasso)
 library(plotrix)
 library(zoo)
-source("/Users/transfer_learning_piecewise_constant/transfer_learning_functions.R")
+source("transfer_learning_functions.R")
 library(changepoints)
 
 
 
 
-path = "/Users/chris/air quality"
+path = "air quality"
 fileNames = dir(path)
 filepath = sapply(fileNames, function(x){paste(path, x, sep = "/")})
 filepath
