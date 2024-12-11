@@ -35,7 +35,6 @@ Below is a summary of the key scripts and their purposes:
 | `transfer_learning_all.R`              | Generates Figure 1 in the paper.                                                                   |
 | `transfer_learning_tk.R`               | Sensitivity analysis on the screening size.                                                        |
 | `transfer_learning_tempde.R`           | Simulations with dependent noise variables and discrepancy dependence between target and sources.   |
-| `transfer_learning_sigma.R`            | Investigates the impact of different noise levels.                                                 |
 | `transfer_learning_large_size.R`       | Simulation studies for varying sample sizes (`n0`).                                                |
 | `transfer_learning_GDP.R`              | Real data analysis for the GDP and IP dataset.                                                     |
 | `transfer_learning_US_electricity.R`   | Real data analysis for the U.S. electricity dataset.                                               |
