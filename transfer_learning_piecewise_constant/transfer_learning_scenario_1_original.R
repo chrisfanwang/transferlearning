@@ -208,12 +208,9 @@ print(plott_1)
 
 
 
-# Define the colors, making sure to name them in the same order as the factor levels
 
 
-
-
-#Plot 1.2: configuration 2 and vary sigma
+#Plot 1.2: configuration 2 and vary kappa
 
 n_0 = 200
 n_k = 400
@@ -414,6 +411,8 @@ plott_1_2= ggplot(data = d_1_2, mapping = aes(x = h, y = value, colour = Method)
   theme_classic()
 
 print(plott_1_2)
+
+
 #Plot 2: configuration 1 and vary H  
 
 n_0 = 200
@@ -819,7 +818,7 @@ plott_2_2= ggplot(data = d_2_2, mapping = aes(x = H, y = value, colour = Method)
 
 print(plott_2_2)
 
-#Plot 3: configuration 1 and vary A  
+#Plot 3: configuration 1 and vary a 
 
 n_0 = 200
 n_k = 400
@@ -1021,7 +1020,7 @@ plott_3= ggplot(data = d_3, mapping = aes(x = A, y = value, colour = Method)) +
 
 print(plott_3)
 
-#Plot 3.2: configuration 2 and vary A
+#Plot 3.2: configuration 2 and vary a
 
 n_0 = 200
 n_k = 400
