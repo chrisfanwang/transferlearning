@@ -8,6 +8,7 @@ library(changepoints)
 library(egg)
 
 tic()
+
 #Plot 1: configuration 2 and temporal dependence in target data 
 
 n_0 = 200
