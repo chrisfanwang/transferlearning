@@ -1,3 +1,5 @@
+
+#Creates a piecewise-constant signal based on given jump means and jump locations.
 form.truth <- function(jump.mean_new, jump.location_new, n_new){
   tmp = seq(0,1,length.out=n_new)
   jump.location_new_2 = sapply(jump.location_new,function(x){max(min(which(tmp>=x)),1)-1})
@@ -7,6 +9,7 @@ form.truth <- function(jump.mean_new, jump.location_new, n_new){
   return(rep(jump.mean_new, times=diff(jump.location_new_3)))
 }
 
+# Constructs an alignment matrix P^{n0_new, n_new}
 P_n0_n<-function(n0_new, n_new){
   P = matrix(0,nrow = n0_new, ncol = n_new)
   m_ratio = n_new/n0_new
@@ -20,6 +23,7 @@ P_n0_n<-function(n0_new, n_new){
   return(P)
 }
 
+# Constructs an alignment matrix \widetilde{P}^{n0_new, n_new}
 P_n_n0<-function(n0_new, n_new){
   P = matrix(0,ncol = n0_new, nrow = n_new)
   m = n_new/n0_new
@@ -33,6 +37,7 @@ P_n_n0<-function(n0_new, n_new){
   return(P)
 }
 
+# Generates a ground truth signal (f_0) and perturbed versions (W) for multiple datasets
 f_gen <- function(jump.mean_new, jump.location_new, n0_new, n_new, size_K, size_A, H_k, sig.delta_1, sig.delta_2, h_1, h_2, exact = T){
   f_0 = form.truth(jump.mean_new, jump.location_new, n0_new)
   W = matrix(NA, nrow = size_K, ncol = n_new)
@@ -59,6 +64,7 @@ f_gen <- function(jump.mean_new, jump.location_new, n0_new, n_new, size_K, size_
   return(list(f_0 = f_0, W=W))
 }
 
+# Generates a ground truth signal (f_0) and perturbed versions (W) with dependent discrepancy dependence between target and sources for multiple datasets
 f_gen_tempde <- function(jump.mean_new, jump.location_new, n0_new, n_new, size_K, size_A, H_k,  h_1, h_2, temp_h){
   f_0 = form.truth(jump.mean_new, jump.location_new, n0_new)
   W = matrix(NA, nrow = size_K, ncol = n_new)
@@ -86,6 +92,7 @@ f_gen_tempde <- function(jump.mean_new, jump.location_new, n0_new, n_new, size_K
   return(list(f_0 = f_0, W=W))
 }
 
+# Adds random noise to a signal to generate observed datasets
 obs_gen <- function(f_0, W, sigma){
   y_0 = f_0 + rnorm(length(f_0), 0, sigma^2)
   obs_y = matrix(NA, nrow = dim(W)[1], ncol = dim(W)[2])
@@ -96,7 +103,7 @@ obs_gen <- function(f_0, W, sigma){
   return(list(y_0 = y_0, obs_y =obs_y))
 }
 
-
+# Adds dependent random noise to a signal to generate observed datasets
 obs_gen_tempde<- function(f_0, W, sigma, coef_temp_1, coef_temp_2 = 0){
   error = rep(NA, length(f_0))
   error[1] = rnorm(1, 0, sigma^2)
@@ -127,7 +134,7 @@ Seq <- function(a, b, ...) {
   
 }
 
-
+# Cross-validation for selecting the best penalty parameter in for l_0 penalized methods
 CV.l0 = function(y, k = 5, gamma, delta = 1){
     n = length(y)
     foldid = c(0,rep(Seq(1,k),n-2)[Seq(1,n-2)],0)
@@ -160,7 +167,7 @@ CV.l0 = function(y, k = 5, gamma, delta = 1){
   
 }  
 
-
+#  l_0 penalized methods with Cross-validation 
 cv_l_0_est <-function(y_tar){
   lamb.init = max((y_tar-mean(y_tar))^2)
   max_in = 1000
@@ -183,7 +190,7 @@ cv_l_0_est <-function(y_tar){
 
 
 
-
+ # Substep for detecting informative sources based on signal similarity metrics.
 A_detect_alg_calculation <- function(y_new, y_old, t_hat_k){
   n_new = length(y_new)
   n0_new = length(y_old)
@@ -194,6 +201,7 @@ A_detect_alg_calculation <- function(y_new, y_old, t_hat_k){
 }
 
 
+# Determine the threshold for detecting informative sources
 A_detect_threshold <- function(y_new, y_old, t_hat_k, trials = 100, quant = 0.99){
   
   result_test =fusedlasso1d(y_new)
@@ -216,7 +224,7 @@ A_detect_threshold <- function(y_new, y_old, t_hat_k, trials = 100, quant = 0.99
 }
 
 
-
+ # Main step for detecting informative sources based on signal similarity metrics.
 A_detect_alg <- function(aux_matrix, y_old,t_hat_k, tau){
   check_length = dim(aux_matrix)[1]
   A_est = c()
@@ -231,7 +239,7 @@ A_detect_alg <- function(aux_matrix, y_old,t_hat_k, tau){
 }
   
 
-
+# Substep for detecting informative sources based on signal similarity metrics.
 A_detect_index <- function(y_matrix, y_old){
   source_size = dim(y_matrix)[2]
   source_number = dim(y_matrix)[1]
@@ -385,13 +393,7 @@ construct_vector <- function(y, y_list) {
   return(y_all)
 }
 
-# Example usage
-y <- c(1, 2, 3)
-y1 <- c(10, 11, 12, 13, 14)
-y2 <- c(20, 21, 22, 23, 24, 25, 26)
 
-y_all <- construct_vector(y, list(y1, y2))
-print(y_all)
 
 
 
