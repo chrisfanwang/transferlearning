@@ -8,7 +8,7 @@ library(changepoints)
 library(egg)
 
 tic()
-#Plot 1: configuration 1 and vary alpha  
+#Plot 1: configuration 1 and vary n_0
 
 
 K = 10
