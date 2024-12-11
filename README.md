@@ -50,9 +50,6 @@ The repository also includes several datasets:
 - **`gdp_q.csv`**: Quarterly GDP dataset.  
 - **`ip.csv`**: Monthly Industrial Production (IP) dataset.  
 
-## Usage
-
-To replicate the simulations or real data analyses, refer to the corresponding script in the file descriptions. Ensure all dependencies are installed before running the code.
 
 
 
