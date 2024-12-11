@@ -81,7 +81,7 @@ fit_fl_train = coef(result_fl_train, lambda = cv_fl_train$lambda.min)$beta
 result_fl = sum((fit_fl_train-data_target_test)^2)/n_0
 
 
-# unisource l_1-penalized method 
+# unisource l_0-penalized method 
 n_k = dim(data_auxiliary)[2]
 y_1_project = as.vector(P_n0_n(n_0, n_k) %*% data_auxiliary[6, ])
 result_fl_T_1_train = fusedlasso1d(y_1_project)
