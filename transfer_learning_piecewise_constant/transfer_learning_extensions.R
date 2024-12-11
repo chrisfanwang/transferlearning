@@ -8,7 +8,7 @@ library(changepoints)
 library(egg)
 
 
-#Plot 1: configuration 1 and vary A  
+#Plot 1: configuration 1 and vary a  
 
 n_0 = 200
 n_k = 400
