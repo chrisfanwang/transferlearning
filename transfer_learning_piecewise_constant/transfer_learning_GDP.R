@@ -81,7 +81,7 @@ fit_fl_train = coef(result_fl_train, lambda = cv_fl_train$lambda.min)$beta
 result_fl = sum((fit_fl_train-data_target_test)^2)/n_0
 
 
-# unisource l_0-penalized method 
+# unisource l_1-penalized method 
 n_k = dim(data_auxiliary)[2]
 y_1_project = as.vector(P_n0_n(n_0, n_k) %*% data_auxiliary[6, ])
 result_fl_T_1_train = fusedlasso1d(y_1_project)
@@ -90,9 +90,11 @@ fit_fl_T_1_train = coef(result_fl_T_1_train, lambda = cv_fl_T_1_train$lambda.min
 result_fl_T_1 = sum((fit_fl_T_1_train -data_target_test)^2)/n_0
 
 
-# l_0-penalized method  on target training data
+# l_0-penalized method on target training data
 fit_l0_train =  cv_l_0_est(data_target_train)
 result_l0 = sum((fit_l0_train-data_target_test)^2)/n_0
+
+# unisource l_0-penalized method 
 fit_l0_T_1_train =  cv_l_0_est(y_1_project)
 result_l0_T_1 = sum((fit_l0_T_1_train-data_target_test)^2)/n_0
 index_k = A_detect_index(data_auxiliary, data_target_train)
